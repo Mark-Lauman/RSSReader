@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <style name="LightTheme" parent="Theme.Sherlock.Light">
-        <item name="ic_resize">@drawable/ic_resize</item>
-        <item name="ic_action_refresh">@drawable/ic_action_refresh</item>
-    </style>
-</resources>

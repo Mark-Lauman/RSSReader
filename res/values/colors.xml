@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="accent">#FF33B5E5</color>
+    <color name="list_activated_holo">#CC0099CC</color>
+    <color name="divider">#aaa</color>
+</resources>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/undo_bar" >
+    
+    <TextView
+        android:id="@+id/undo_message"
+        style="@style/undo_message" />
+    
+    <View
+        android:id="@+id/undo_div"
+        style="@style/undo_div" />
+    
+    <Button
+        android:id="@+id/undo_button"
+        style="@style/undo_button" />
+	
+</LinearLayout>

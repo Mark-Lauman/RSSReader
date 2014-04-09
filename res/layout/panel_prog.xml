@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/prog_panel"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="8dp" >
+    
+    <TextView
+        android:id="@+id/prog_perc"
+        android:textSize="17sp"
+        android:singleLine="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true" />
+    
+    <TextView
+        android:id="@+id/prog_title"
+        android:textSize="17sp"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:paddingRight="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@id/prog_perc" />
+    
+    <ProgressBar
+        android:id="@+id/prog_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:paddingTop="6dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/prog_title" />
+    
+</RelativeLayout>
