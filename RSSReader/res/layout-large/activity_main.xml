@@ -1,0 +1,59 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+	
+	<fragment
+	    android:id="@+id/folder_panel"
+	    android:tag="folder_panel"
+	    android:name="ca.marklauman.rssreader.panels.FolderPanel"
+	    tools:layout="@layout/panel_folder"
+	    android:layout_width="250dp"
+	    android:layout_height="match_parent"
+	    android:layout_alignParentLeft="true" />
+	
+	<View
+	    android:id="@+id/folder_div"
+	    android:background="@color/divider"
+	    android:layout_width="2dp"
+	    android:layout_height="match_parent"
+	    android:layout_toRightOf="@id/folder_panel" />
+	
+	<fragment
+	    android:id="@+id/prog_panel"
+	    android:name="ca.marklauman.rssreader.panels.ProgressPanel"
+	    tools:layout="@layout/panel_prog"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_toRightOf="@id/folder_div"
+	    android:layout_alignParentRight="true"
+	    android:layout_alignParentBottom="true" />
+	
+	<View
+        android:id="@+id/prog_div"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@color/divider"
+	    android:layout_toRightOf="@id/folder_div"
+        android:layout_above="@id/prog_panel" />
+	
+	<fragment
+	    android:tag="item_panel"
+	    android:name="ca.marklauman.rssreader.panels.ItemPanel"
+	    tools:layout="@layout/panel_item"
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent"
+	    android:layout_alignParentRight="true"
+	    android:layout_toRightOf="@id/folder_div"
+	    android:layout_above="@id/prog_div" />
+	
+	<fragment
+	    android:name="ca.marklauman.rssreader.panels.PopupPanel"
+	    tools:layout="@layout/panel_popup"
+	    android:layout_width="match_parent"
+	    android:layout_height="48dp"
+	    android:layout_alignParentBottom="true"
+	    android:layout_margin="16dp"
+	    android:tag="POPUP" />
+	
+</RelativeLayout>
