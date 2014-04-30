@@ -3,31 +3,12 @@
     
     <item android:id="@+id/action_refresh"
         android:showAsAction="ifRoom"
-        android:icon="?ic_action_refresh"
+        android:icon="@drawable/ic_action_refresh"
         android:title="@string/action_refresh" />
     
-    <item android:id="@+id/action_new_fold"
-        android:showAsAction="never"
-        android:icon="@drawable/ic_action_new"
-        android:title="@string/action_new_fold"/>
-    
-    <item android:id="@+id/action_mng_feed"
-        android:showAsAction="never"
-        android:icon="@drawable/ic_action_feeds"
-        android:title="@string/action_mng_feed" />
-    
     <item android:id="@+id/action_settings"
-        android:showAsAction="never"
+        android:showAsAction="ifRoom"
         android:icon="@drawable/ic_action_settings"
         android:title="@string/action_settings" />
-    
-    <item android:id="@+id/action_make_samples"
-        android:showAsAction="never"
-        android:icon="@drawable/ic_action_new"
-        android:title="Make Sample Data" />
-    
-    <item android:id="@+id/action_poke_db"
-        android:showAsAction="never"
-        android:title="Poke Database" />
     
 </menu>

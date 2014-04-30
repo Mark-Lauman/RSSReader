@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="ca.marklauman.rssreader"
-    android:versionCode="1"
-    android:versionName="1.0" >
+    android:versionCode="2"
+    android:versionName="2.0.0" >
 
     <uses-sdk
         android:minSdkVersion="9"
@@ -29,22 +29,9 @@
         </activity>
         
         <activity
-            android:name="ca.marklauman.rssreader.ManageFeedsActivity"
-            android:label="@string/manage_feeds" >
-            <meta-data
-            	android:name="android.support.PARENT_ACTIVITY"
-            	android:value="ca.marklauman.rssreader.MainActivity" />
+            android:name="ca.marklauman.rssreader.settings.SettingsActivity"
+            android:label="@string/action_settings">
         </activity>
-        
-        <provider
-            android:name="ca.marklauman.rssreader.providers.Database"
-            android:authorities="ca.marklauman.rssdata"
-            android:enabled="true"
-            android:exported="false" />
-        
-        <service
-            android:name="ca.marklauman.rssreader.providers.DBService"
-            android:exported="false" />
         
     </application>
 

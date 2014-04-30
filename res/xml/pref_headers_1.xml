@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/action_settings">
+    
+    <PreferenceScreen android:title="@string/feeds">
+        <intent android:targetPackage="ca.marklauman.rssreader"
+            android:targetClass="ca.marklauman.rssreader.settings.SettingsActivity"
+            android:action="ca.marklauman.rssreader.PREF_FEEDS" />
+    </PreferenceScreen>
+    
+</PreferenceScreen>
