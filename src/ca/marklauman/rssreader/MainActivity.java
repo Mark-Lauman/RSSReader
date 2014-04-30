@@ -8,6 +8,8 @@ import com.actionbarsherlock.view.MenuItem;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.widget.TextView;
 
 public class MainActivity extends SherlockFragmentActivity {
 
@@ -26,6 +28,10 @@ public class MainActivity extends SherlockFragmentActivity {
 	@Override
 	public void onStart() {
 		super.onStart();
+		TextView view = (TextView) findViewById(R.id.text2);
+		String val = PreferenceManager.getDefaultSharedPreferences(this)
+									  .getString("feed1", "");
+		view.setText(val);
 	}
 	
 	@Override

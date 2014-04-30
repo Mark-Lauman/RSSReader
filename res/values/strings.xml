@@ -6,5 +6,6 @@
     
     <string name="action_settings">Settings</string>
     <string name="feeds">Feeds</string>
-    <string name="feed1">Feed 1</string>
+    <string name="feed1">Feed URL #1</string>
+    <string name="no_url">No URL Set</string>
 </resources>
