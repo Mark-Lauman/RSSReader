@@ -31,6 +31,12 @@
             android:label="@string/action_settings">
         </activity>
         
+        <provider
+            android:name="ca.marklauman.rssreader.database.RSSData"
+            android:authorities="ca.marklauman.rssdata"
+            android:enabled="true"
+            android:exported="false" />
+        
     </application>
 
 </manifest>
