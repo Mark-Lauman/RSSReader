@@ -53,10 +53,13 @@ public class RSSData extends ContentProvider {
 			String brief = Html.fromHtml(values.getAsString(Item._CONTENT))
 					   	   .toString()
 					   	   .replace(""+(char)65532, "")
+					   	   .replace("\n", " ")
+					   	   .replace("\r", " ")
+					   	   .replace("  ", " ")
 					   	   .replace("  ", " ")
 					   	   .trim();
-			if(brief.length() > 500)
-				brief = brief.substring(0, 499) + "…";
+			if(brief.length() > 600)
+				brief = brief.substring(0, 599) + "…";
 			values.put(Item._BRIEF, brief);
 			break;
 		default:

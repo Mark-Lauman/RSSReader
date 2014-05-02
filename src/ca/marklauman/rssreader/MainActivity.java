@@ -1,5 +1,8 @@
 package ca.marklauman.rssreader;
 
+import java.util.Calendar;
+
+import ca.marklauman.rssreader.adapters.ItemAdapter;
 import ca.marklauman.rssreader.database.Item;
 import ca.marklauman.rssreader.settings.SettingsActivity;
 
@@ -17,11 +20,14 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.util.Log;
+import android.widget.ListView;
 import android.widget.TextView;
 
 public class MainActivity extends SherlockFragmentActivity
 						  implements LoaderCallbacks<Cursor> {
-
+	
+	ItemAdapter adapt;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -41,9 +47,11 @@ public class MainActivity extends SherlockFragmentActivity
 		String val = PreferenceManager.getDefaultSharedPreferences(this)
 									  .getString("feed1", "");
 		view.setText(val);
+		ListView list = (ListView) findViewById(R.id.list);
+		adapt = new ItemAdapter(this);
+		list.setAdapter(adapt);
 		
 		getSupportLoaderManager().restartLoader(1, null, this);
-		
 	}
 	
 	@Override
@@ -92,13 +100,12 @@ public class MainActivity extends SherlockFragmentActivity
 
 	@Override
 	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-		// TODO Auto-generated method stub
+		adapt.changeCursor(data);
 		Log.d("Items", DatabaseUtils.dumpCursorToString(data));
 	}
 
 	@Override
 	public void onLoaderReset(Loader<Cursor> loader) {
-		// TODO Auto-generated method stub
-		
+		adapt.changeCursor(null);
 	}
 }
