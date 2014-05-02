@@ -1,12 +1,3 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lint>
-    <issue id="InconsistentLayout">
-        <ignore path="res/layout/activity_main.xml" />
-    </issue>
-    <issue id="Overdraw">
-        <ignore path="res/layout/dialog_feed.xml" />
-    </issue>
-    <issue id="UseCompoundDrawables">
-        <ignore path="res/layout/list_item_item.xml" />
-    </issue>
 </lint>

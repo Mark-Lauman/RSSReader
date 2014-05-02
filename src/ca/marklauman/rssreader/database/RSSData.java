@@ -58,8 +58,8 @@ public class RSSData extends ContentProvider {
 					   	   .replace("  ", " ")
 					   	   .replace("  ", " ")
 					   	   .trim();
-			if(brief.length() > 600)
-				brief = brief.substring(0, 599) + "…";
+			if(brief.length() > 1000)
+				brief = brief.substring(0, 999) + "…";
 			values.put(Item._BRIEF, brief);
 			break;
 		default:

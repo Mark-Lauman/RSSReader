@@ -10,12 +10,12 @@
     <TextView android:id="@+id/time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingLeft="8dp"
+        android:paddingLeft="10dp"
         android:layout_alignParentRight="true"
-        android:textColor="?android:attr/textColorSecondary"
+        android:textColor="@android:color/primary_text_light"
         android:singleLine="true"
         android:textSize="12sp"
-        android:text="8:54AM" />
+        android:text="@string/sample_time" />
     
     <TextView android:id="@+id/title"
         android:layout_width="wrap_content"
@@ -23,11 +23,11 @@
         android:layout_alignParentLeft="true"
         android:layout_toLeftOf="@id/time"
         android:layout_alignWithParentIfMissing="true"
-        android:textColor="?android:attr/textColorPrimary"
+        android:textColor="@android:color/primary_text_light"
         android:singleLine="true"
         android:ellipsize="end"
         android:textSize="18sp"
-        android:text="Report: Remember Me Developer Dontnod Files for Bankruptcy" />
+        android:text="@string/sample_title" />
     
     <TextView android:id="@+id/brief"
         android:layout_width="wrap_content"
@@ -35,10 +35,10 @@
         android:layout_alignParentLeft="true"
         android:layout_below="@id/title"
         android:layout_alignWithParentIfMissing="true"
-        android:textColor="?android:attr/textColorSecondary"
-        android:textSize="12sp"
+        android:textColor="@android:color/tertiary_text_light"
+        android:textSize="14sp"
         android:maxLines="2"
         android:ellipsize="end"
-        android:text="Multiple French media outlets are reporting that Dontnod Entertainment has filed for redressement judiciaire, which is the French equivalent of bankruptcy. View Article" />
+        android:text="@string/sample_brief" />
     
 </RelativeLayout>

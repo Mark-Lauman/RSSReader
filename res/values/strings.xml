@@ -8,4 +8,8 @@
     <string name="feeds">Feeds</string>
     <string name="feed1">Feed URL #1</string>
     <string name="no_url">No URL Set</string>
+    
+    <string name="sample_time">8:54 AM</string>
+    <string name="sample_title">Lorem ipsum dolor sit amet, consectetur adipg elit.</string>
+    <string name="sample_brief">Lorem ipsum dolor sit amet, consectetur adipg elit. Proin vitae elit vulputate, vestibulum urna non, ultrices lorem. Morbi nec urna neque. Nunc in pretium dui. Curabitur pellentesque accumsan nulla quis porttitor. Aliquam velit tortor, convallis nec nulla at, dignissim ultrices velit. Cras et rutrum neque, a egestas leo. Mauris felis augue, imperdiet at nunc et, bibendum molestie mi. Ut ullamcorper sapien convallis nulla tristique pharetra. In consectetur vestibulum dolor at malesuada. Nulla quis turpis sem.</string>
 </resources>

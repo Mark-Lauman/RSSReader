@@ -1,7 +1,5 @@
 package ca.marklauman.rssreader;
 
-import java.util.Calendar;
-
 import ca.marklauman.rssreader.adapters.ItemAdapter;
 import ca.marklauman.rssreader.database.Item;
 import ca.marklauman.rssreader.settings.SettingsActivity;
@@ -13,15 +11,11 @@ import com.actionbarsherlock.view.MenuItem;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.util.Log;
 import android.widget.ListView;
-import android.widget.TextView;
 
 public class MainActivity extends SherlockFragmentActivity
 						  implements LoaderCallbacks<Cursor> {
@@ -43,10 +37,6 @@ public class MainActivity extends SherlockFragmentActivity
 	@Override
 	public void onStart() {
 		super.onStart();
-		TextView view = (TextView) findViewById(R.id.text2);
-		String val = PreferenceManager.getDefaultSharedPreferences(this)
-									  .getString("feed1", "");
-		view.setText(val);
 		ListView list = (ListView) findViewById(R.id.list);
 		adapt = new ItemAdapter(this);
 		list.setAdapter(adapt);
@@ -95,13 +85,17 @@ public class MainActivity extends SherlockFragmentActivity
 	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 		CursorLoader c = new CursorLoader(this);
 		c.setUri(Item.URI);
+		c.setProjection(new String[]{Item._ID,
+									 Item._TITLE,
+									 Item._BRIEF,
+									 Item._TIME,
+									 Item._TIME_SAVE});
 		return c;
 	}
 
 	@Override
 	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 		adapt.changeCursor(data);
-		Log.d("Items", DatabaseUtils.dumpCursorToString(data));
 	}
 
 	@Override
