@@ -2,6 +2,9 @@ package ca.marklauman.rssreader.database;
 
 import java.util.Calendar;
 
+import ca.marklauman.rssreader.database.schema.Database;
+import ca.marklauman.rssreader.database.schema.Item;
+
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.Context;

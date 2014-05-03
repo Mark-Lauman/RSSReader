@@ -7,7 +7,7 @@ import java.util.Date;
 import java.util.Locale;
 
 import ca.marklauman.rssreader.R;
-import ca.marklauman.rssreader.database.Item;
+import ca.marklauman.rssreader.database.schema.Item;
 import android.content.Context;
 import android.database.Cursor;
 import android.support.v4.widget.SimpleCursorAdapter.ViewBinder;

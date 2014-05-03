@@ -1,4 +1,4 @@
-package ca.marklauman.rssreader.database;
+package ca.marklauman.rssreader.database.schema;
 
 import android.net.Uri;
 import android.provider.BaseColumns;
