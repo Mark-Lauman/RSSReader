@@ -9,7 +9,6 @@ import org.xmlpull.v1.XmlPullParserFactory;
 import ca.marklauman.rssreader.database.schema.Item;
 
 import android.content.ContentValues;
-import android.util.Log;
 
 /** This class parses RSS files for you. Input is
  *  buffered, so you may use an unbuffered stream
@@ -79,7 +78,6 @@ public final class RSSParser {
 		try{ while(parser.next() != XmlPullParser.END_DOCUMENT
 				    && !(parser.getEventType() == XmlPullParser.START_TAG
 						 || RSSTag.isItem(parser.getName()))) {
-			Log.d("skip", "" + parser.getEventType());
 		}
 		} catch (Exception e) {
 			// Exception = no more items found.
