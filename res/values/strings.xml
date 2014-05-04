@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">RSS Reader</string>
+    <string name="service_name">RSS Updater</string>
+    <string name="service_desc">Updates RSS feed data from the internet. If stopped, feeds may become out of date.</string>
     
     <string name="action_refresh">Refresh</string>
     

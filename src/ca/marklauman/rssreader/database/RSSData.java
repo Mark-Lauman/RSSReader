@@ -22,6 +22,9 @@ public class RSSData extends ContentProvider {
 	private static final int ITEM_ID = 1;
 	/** Matches uri's to their resource ids */
 	private UriMatcher matcher;
+	/** Database in the cache directory.
+	 *  (contains the Items table)    */
+	DBHandler cache_db;
 	
 	
 	@Override
@@ -30,6 +33,9 @@ public class RSSData extends ContentProvider {
 		matcher.addURI(Database.AUTHORITY,
 					   Item.TABLE_NAME,
 					   ITEM_ID);
+		Context c = getContext();
+		String db_name = c.getCacheDir().getPath() + "/" + Database.NAME;
+		cache_db = new DBHandler(c, db_name);
 		return true;
 	}
 	
@@ -68,10 +74,29 @@ public class RSSData extends ContentProvider {
 		default:
 			return null;
 		}
-		SQLiteDatabase db = getCacheDB();
-		long id = db.insertWithOnConflict(table,
-		  								  null, values,
-								  		  SQLiteDatabase.CONFLICT_IGNORE);
+		
+		// do the insertion
+		SQLiteDatabase db = cache_db.getWritableDatabase();
+		long id;
+		try {
+			id = db.insertWithOnConflict(table,
+										 null, values,
+										 SQLiteDatabase.CONFLICT_IGNORE);
+		} catch (Exception e) {
+			/* Insertion will fail if the db is
+			 * destroyed in another thread (such
+			 * as when the user clears the cache data
+			 * in the Android Settings screen)     */
+			try{cache_db.close();
+			} catch(Exception e2) {}
+			Context c = getContext();
+			String db_name = c.getCacheDir().getPath() + "/" + Database.NAME;
+			cache_db = new DBHandler(c, db_name);
+			db = cache_db.getWritableDatabase();
+			id = db.insertWithOnConflict(table,
+										 null, values,
+										 SQLiteDatabase.CONFLICT_IGNORE);
+		}
 		if(id < 0) return null;
 		getContext().getContentResolver()
 					.notifyChange(uri, null);
@@ -91,7 +116,7 @@ public class RSSData extends ContentProvider {
 			return 0;
 		}
 		
-		SQLiteDatabase db = getCacheDB();
+		SQLiteDatabase db = cache_db.getWritableDatabase();
 		int rows = db.update(table, values,
 							 selection, selectionArgs);
 		if(0 < rows)
@@ -113,7 +138,7 @@ public class RSSData extends ContentProvider {
 			return null;
 		}
 		
-		SQLiteDatabase db = getCacheDB();
+		SQLiteDatabase db = cache_db.getReadableDatabase();
 		Cursor c = qb.query(db, projection,
 							selection, selectionArgs,
 							null, null, sortOrder);
@@ -133,22 +158,12 @@ public class RSSData extends ContentProvider {
 			return 0;
 		}
 		
-		SQLiteDatabase db = getCacheDB();
+		SQLiteDatabase db = cache_db.getWritableDatabase();
 		int rows = db.delete(table, selection, selectionArgs);
 		if(0 < rows)
 			getContext().getContentResolver()
 						.notifyChange(uri, null);
 		return rows;
-	}
-	
-	
-	/** Get the cache database.
-	 * (Contains all RSS items) */
-	private SQLiteDatabase getCacheDB() {
-		Context c = getContext();
-		String db_name = c.getCacheDir().getPath() + "/" + Database.NAME;
-		DBHandler db = new DBHandler(c, db_name);
-		return db.getWritableDatabase();
 	}
 	
 	

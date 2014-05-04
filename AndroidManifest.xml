@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="ca.marklauman.rssreader"
-    android:versionCode="2"
-    android:versionName="2.0.0" >
+    android:versionCode="8"
+    android:versionName="2.0.7" >
 
     <uses-sdk
         android:minSdkVersion="9"
@@ -18,7 +18,7 @@
         android:theme="@style/LightTheme" >
         
         <activity
-            android:name="ca.marklauman.rssreader.MainActivity"
+            android:name=".MainActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -27,14 +27,20 @@
         </activity>
         
         <activity
-            android:name="ca.marklauman.rssreader.settings.SettingsActivity"
+            android:name=".settings.SettingsActivity"
             android:label="@string/action_settings">
         </activity>
         
         <provider
-            android:name="ca.marklauman.rssreader.database.RSSData"
+            android:name=".database.RSSData"
             android:authorities="ca.marklauman.rssdata"
             android:enabled="true"
+            android:exported="false" />
+        
+        <service
+            android:name=".database.Updater"
+            android:label="@string/service_name"
+            android:description="@string/service_desc"
             android:exported="false" />
         
     </application>
