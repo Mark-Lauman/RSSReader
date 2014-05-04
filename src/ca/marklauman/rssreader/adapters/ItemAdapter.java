@@ -9,25 +9,33 @@ import java.util.Locale;
 import ca.marklauman.rssreader.R;
 import ca.marklauman.rssreader.database.schema.Item;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.support.v4.widget.SimpleCursorAdapter.ViewBinder;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.TextView;
 
 /** Adapter for cursors from the {@link Item} table
  *  of {@link RSSData}.
  *  @author Mark Lauman                          */
 public class ItemAdapter extends CursorSelAdapter
-						 implements ViewBinder {
+						 implements ViewBinder,
+									OnItemClickListener {
 	
-	// index of the time column
+	/** index of the time column */
 	private int col_time;
+	/** index of the url column */
+	private int col_url;
 	/** Formatter for displaying the year correctly */
 	private DateFormat format_year;
 	/** Formatter for displaying the month correctly */
 	private DateFormat format_month;
 	/** Formatter for displaying the hour correctly */
 	private DateFormat format_hour;
+	
 	
 	public ItemAdapter(Context context) {
 		super(context, R.layout.list_item,
@@ -45,13 +53,16 @@ public class ItemAdapter extends CursorSelAdapter
 							 .getTimeFormat(context);
 	}
 	
+	
 	@Override
 	public void changeCursor(Cursor cursor) {
 		super.changeCursor(cursor);
 		if(cursor == null) return;
 		col_time = cursor.getColumnIndex(Item._TIME);
+		col_url = cursor.getColumnIndex(Item._URL);
 	}
-
+	
+	
 	@Override
 	public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
 		if(columnIndex == col_time) {
@@ -61,6 +72,7 @@ public class ItemAdapter extends CursorSelAdapter
 		}
 		return false;
 	}
+	
 	
 	/** Converts the provided time to a String.
 	 *  Follows system settings for time formatting.
@@ -78,5 +90,15 @@ public class ItemAdapter extends CursorSelAdapter
 			return format_month.format(new Date(time));
 		}
 		return format_year.format(new Date(time));
+	}
+	
+	
+	@Override
+	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+		if(mCursor == null || !mCursor.moveToPosition(position))
+			return;
+		Uri url = Uri.parse(mCursor.getString(col_url));
+		Intent launchBrowser = new Intent(Intent.ACTION_VIEW, url);
+		mContext.startActivity(launchBrowser);
 	}
 }

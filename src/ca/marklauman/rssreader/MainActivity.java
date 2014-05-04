@@ -57,6 +57,7 @@ public class MainActivity extends SherlockFragmentActivity
 		ListView list = (ListView) findViewById(R.id.list);
 		adapt = new ItemAdapter(this);
 		list.setAdapter(adapt);
+		list.setOnItemClickListener(adapt);
 		
 		getSupportLoaderManager().restartLoader(1, null, this);
 	}
@@ -117,6 +118,7 @@ public class MainActivity extends SherlockFragmentActivity
 		c.setProjection(new String[]{Item._ID,
 									 Item._TITLE,
 									 Item._BRIEF,
+									 Item._URL,
 									 Item._TIME,
 									 Item._TIME_SAVE});
 		return c;
