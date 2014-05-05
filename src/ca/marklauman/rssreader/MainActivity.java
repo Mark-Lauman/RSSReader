@@ -9,28 +9,43 @@ import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.view.View;
 import android.widget.ListView;
-import android.widget.TextView;
+import android.widget.ProgressBar;
+import android.widget.Toast;
 
 public class MainActivity extends SherlockFragmentActivity
 						  implements LoaderCallbacks<Cursor> {
 	
-	/** Adapter for the item list */
-	ItemAdapter adapt;
+	/** Listens to the rssdata {@link Updater}
+	 *  so progress can be displayed.       */
+	private UpdateListener updaterListener;
+	
+	/** Adapter for the item list. */
+	private ItemAdapter adapt;
+	/** Progress bar on the screen bottom */
+	private ProgressBar prog_bar;
 	
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		
+		IntentFilter filter = new IntentFilter(Updater.BROADCAST);
+		filter.addCategory(Intent.CATEGORY_DEFAULT);
+		updaterListener = new UpdateListener(this);
+		registerReceiver(updaterListener, filter);
 	}
 	
 	
@@ -44,14 +59,12 @@ public class MainActivity extends SherlockFragmentActivity
 	public void onStart() {
 		super.onStart();
 		
-		TextView txt = (TextView) findViewById(R.id.text);
-		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
-		txt.setText(pref.getString("feed1", ""));
-		
 		ListView list = (ListView) findViewById(R.id.list);
 		adapt = new ItemAdapter(this);
 		list.setAdapter(adapt);
 		list.setOnItemClickListener(adapt);
+		
+		prog_bar = (ProgressBar) findViewById(R.id.progress);
 		
 		getSupportLoaderManager().restartLoader(1, null, this);
 	}
@@ -59,6 +72,7 @@ public class MainActivity extends SherlockFragmentActivity
 	
 	@Override
 	public void onDestroy() {
+		unregisterReceiver(updaterListener);
 		super.onDestroy();
 	}
 	
@@ -80,6 +94,7 @@ public class MainActivity extends SherlockFragmentActivity
 										   .getString("feed1", "");
 			Intent refresh = new Intent(this, Updater.class);
 			refresh.putExtra(Updater.PARAM_URL, path);
+			refresh.putExtra(Updater.PARAM_CACHE, getCacheDir().getPath());
 			startService(refresh);
 			return true;
 		
@@ -116,5 +131,60 @@ public class MainActivity extends SherlockFragmentActivity
 	@Override
 	public void onLoaderReset(Loader<Cursor> loader) {
 		adapt.changeCursor(null);
+	}
+	
+	
+	private class UpdateListener extends BroadcastReceiver {
+		private Context mContext;
+		
+		public UpdateListener(Context c) {
+			mContext = c;
+		}
+		
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			Bundle extras = intent.getExtras();
+			String msg;
+			
+			switch(extras.getInt(Updater.MSG_ERR)) {
+			case Updater.ERR_OFFLINE:
+				msg = mContext.getString(R.string.err_offline);
+				Toast.makeText(mContext, msg, Toast.LENGTH_LONG)
+					 .show();
+				prog_bar.setVisibility(View.GONE);
+				return;
+			case Updater.ERR_URL:
+				msg = mContext.getString(R.string.err_url);
+				String url = extras.getString(Updater.MSG_URL);
+				Toast.makeText(mContext, msg + " " + url, Toast.LENGTH_LONG)
+					 .show();
+				prog_bar.setVisibility(View.GONE);
+				return;
+			case Updater.ERR_CONN:
+				msg = mContext.getString(R.string.err_connection);
+				Toast.makeText(mContext, msg, Toast.LENGTH_LONG)
+					 .show();
+				prog_bar.setVisibility(View.GONE);
+				return;
+			case Updater.ERR_NONE:
+				break;
+			default:
+				msg = mContext.getString(R.string.err_internal);
+				Toast.makeText(mContext, msg, Toast.LENGTH_LONG)
+				 	 .show();
+				prog_bar.setVisibility(View.GONE);
+				return;
+			}
+			
+			int phase = extras.getInt(Updater.MSG_PHASE);
+			int prog = extras.getInt(Updater.MSG_PROG);
+			prog_bar.setVisibility(View.VISIBLE);
+			if(phase == Updater.PHASE_DOWNLOAD)
+				prog_bar.setProgress(prog / 2);
+			else {
+				if(prog == 100) prog_bar.setVisibility(View.GONE);
+				else prog_bar.setProgress(prog / 2 + 50);
+			}
+		}
 	}
 }

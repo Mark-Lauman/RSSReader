@@ -1,8 +1,14 @@
 package ca.marklauman.rssreader.database;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import ca.marklauman.rssreader.database.schema.Item;
 import android.app.IntentService;
@@ -13,9 +19,23 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.util.Log;
 
+/** <p>Service used to update the database from the
+ *  internet.</p>
+ *  <p>Some essential parameters must be specified
+ *  with {@link Intent#putExtras(Bundle)} before
+ *  you launch this service. These are the urls
+ *  you wish to update ({@link #PARAM_URL})
+ *  and the cache location
+ *  ({@link #PARAM_CACHE}).
+ *  This service <b>must</b> have write access
+ *  to the cache, or it will fail to do anything.
+ *  All cache files will be deleted on completion.</p>
+ *  <p>The progress of this service may be tracked
+ *  with {@link #BROADCAST}s. For more details,
+ *  see all the variables whose names begin with
+ *  MSG_</p>
+ *  @author Mark Lauman                       */
 public class Updater extends IntentService {
 	
 	/** When you launch an {@link Intent} calling
@@ -23,67 +43,251 @@ public class Updater extends IntentService {
 	 *  {@link Intent#putExtra(String, String)}
 	 *  with this name to pass the url of the
 	 *  feed to download.                    */
-	public static final String PARAM_URL = "url";
+	public static final String PARAM_URL =
+			"ca.marklauman.rssdata.url";
+	/** When you launch an {@link Intent} calling
+	 *  this service, use
+	 *  {@link Intent#putExtra(String, String)}
+	 *  with this name to pass the path to the
+	 *  application's cache directory.       */
+	public static final String PARAM_CACHE =
+			"ca.marklauman.rssdata.cache_dir";
 	
+	/** {@link Intent}s broadcast by this service
+	 *  will have this type of action.         */
+	public static final String BROADCAST =
+			"ca.marklauman.rssdata.update";
+	
+	/** This extra in a broadcast indicates the
+	 *  current phase the updater is in. (Either
+	 *  {@link #PHASE_DOWNLOAD} or
+	 *  {@link #PHASE_PARSE}).  */
+	public static final String MSG_PHASE =
+			"ca.marklauman.rssdata.phase";
+	/** The updater is downloading data. */
+	public static final int PHASE_DOWNLOAD = 0;
+	/** The updater is parsing the data. */
+	public static final int PHASE_PARSE = 1;
+	/** Number of phases. Phase index starts at 0
+	 *  and ends at {@code PHASE_QTY - 1}      */
+	public static final int PHASE_QTY = 2;
+	
+	/** This extra in a broadcast indicates the
+	 *  progress of the current phase. It is passed
+	 *  as an integer from 0 - 100 (inclusive).  */
+	public static final String MSG_PROG =
+			"ca.marklauman.rssdata.progress";
+	
+	/** This extra in a broadcast indicates the
+	 *  URL being processed right now. The URL
+	 *  is passed as a String.       */
+	public static final String MSG_URL =
+			"ca.marklauman.rssdata.url";
+	
+	/** This extra in a broadcast indicates any
+	 *  errors which have occurred. (one of
+	 *  {@link #ERR_NONE}, {@link #ERR_PARAMS},
+	 *  {@link #ERR_OFFLINE}, {@link #ERR_URL},
+	 *  {@link #ERR_ACCESS} or {@link #ERR_CONN}. */
+	public static final String MSG_ERR =
+			"ca.marklauman.rssdata.error";
+	/** Everything is fine. No error has occurred. */
+	public static final int ERR_NONE = 0;
+	/** Bad input parameters. */
+	public static final int ERR_PARAMS = 0;
+	/** There is no internet connection. */
+	public static final int ERR_OFFLINE = 2;
+	/** The url passed was invalid */
+	public static final int ERR_URL = 3;
+	/** Updater does not have write access
+	 *  to the cache directory.         */
+	public static final int ERR_ACCESS = 4;
+	/** Connection lost mid-op
+	 *  (to cache file or to web). */
+	public static final int ERR_CONN = 5;
+	
+	
+	/** The last progress value sent with
+	 *  {@link #sendProgress(Bundle)}. */
+	private int last_prog;
+	
+	
+	/** Standard constructor called by the system.
+	 *  Do <b>not</b> call this directly. Instead
+	 *  launch this service with an {@link Intent}. */
 	public Updater() {
-		/* The name passed to super will become
-		 * the name of this thread (but not its label
-		 * - that's set in the manifest            */
-		super("ca.marklauman.rssreader.database.Updater");
+		/* The name passed to super() will become
+		 * the name of this thread for the system.
+		 * The visible name of this service is set
+		 * in the Android manifest.             */
+		super("ca.marklauman.rssdata.Updater");
 	}
-
+	
+	
 	@Override
 	protected void onHandleIntent(Intent intent) {
-		// Get the url to load
-		if(intent == null) return;
+		/* Current status:
+		 * Parameters unchecked, download phase, 0% */
+		Bundle status = new Bundle();
+		status.putInt(MSG_PHASE, PHASE_DOWNLOAD);
+		status.putInt(MSG_PROG, 0);
+		status.putInt(MSG_ERR, ERR_PARAMS);
+		last_prog = 0;
+		
+		// Get the cache directory & url to load
+		if(intent == null) {
+			// bad params
+			transmit(status);	return;
+		}
 		Bundle extras = intent.getExtras();
-		if(extras == null) return;
+		if(extras == null) {
+			// bad params
+			transmit(status);	return;
+		}
 		String url = extras.getString(PARAM_URL);
-		if(url == null) return;
+		status.putString(MSG_URL, url);
+		if(url == null)  {
+			// bad params
+			transmit(status);	return;
+		}
+		String cache_dir = extras.getString(PARAM_CACHE);
+		if(cache_dir == null)  {
+			// bad params
+			transmit(status);	return;
+		}
+		cache_dir += "/";
 		
 		// Check if we're online
 		ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+		status.putInt(MSG_ERR, ERR_OFFLINE);
 		if(connMgr == null) {
-			Log.d("Updater", "No Connection");
-			return;
+			// Offline - quit
+			transmit(status);	return;
 		}
 		NetworkInfo net_info = connMgr.getActiveNetworkInfo();
 		if(net_info == null) {
-			Log.d("Updater", "No Connection");
-			return;
+			// Offline - quit
+			transmit(status);	return;
 		}
 		if(net_info.isConnected()) {
 			switch(net_info.getType()) {
 			case ConnectivityManager.TYPE_ETHERNET:
 			case ConnectivityManager.TYPE_WIFI:
-				Log.d("Updater", "LocalNet available!");
+				// Online - proceed to next step
+				status.putInt(MSG_ERR, ERR_NONE);
+				transmit(status);
 				break;
 			default:
-				Log.d("Updater", "RemoteNet available!");
+				// Offline - quit
+				transmit(status);	return;
 			}
-		} else
-			Log.d("Updater", "No Connection");
+		} else {
+			// Offline - quit
+			transmit(status);	return;
+		}
 		
-		// Download the feed
+		// We are online, on wifi or ethernet
+		// Setup variables for download phase
+		File cache_file = new File(cache_dir + "tmp.rss");
+		HttpURLConnection conn = null;
+		ProgressStream in = null;
+		BufferedOutputStream out = null;
+		
+		// Download the feed.
+		try {
+			out = new BufferedOutputStream(new FileOutputStream(cache_file));
+			URL web_url = new URL(url);
+			conn = (HttpURLConnection) web_url.openConnection();
+			conn.setRequestMethod("GET");
+			conn.setDoInput(true);
+			conn.connect();
+			in = new ProgressStream(conn.getInputStream(),
+									conn.getContentLength());
+			// the actual transfer
+			int prog = 0;
+			for(int dat=in.read(); 0<=dat; dat=in.read()) {
+				out.write(dat);
+				status.putInt(MSG_PROG, prog);
+				sendProgress(status);
+			}
+		} catch (MalformedURLException e1) {
+			status.putInt(MSG_ERR, ERR_URL);
+		} catch (FileNotFoundException e) {
+			// cannot access cache directory
+			status.putInt(MSG_ERR, ERR_ACCESS);
+		} catch (IOException e) {
+			// bad connection of some kind
+			status.putInt(MSG_ERR, ERR_CONN);
+		} finally {
+			// close all connections
+			try{ if(in != null) in.close(); }
+			catch (IOException e) {}
+			try{ if(out != null) {
+				out.flush();
+				out.close();
+			}} catch (IOException e) {}
+			if(conn != null) conn.disconnect();
+		}
+		// close this phase
+		status.putInt(MSG_PROG, 100);
+		transmit(status);
+		if(status.getInt(MSG_ERR) != ERR_NONE)
+			return;
 		
 		// Parse the feed
-		// TODO: This is a placeholder implementation
-		String path = PreferenceManager.getDefaultSharedPreferences(this)
-				   .getString("feed1", "");
+		status.putInt(MSG_PHASE, PHASE_PARSE);
+		status.putInt(MSG_PROG, 0);
+		sendProgress(status);
 		RSSParser parser = null;
 		try {
-			File file = new File(path);
-			parser = new RSSParser(new FileInputStream(file),
-											 file.length());
+			parser = new RSSParser(new FileInputStream(cache_file),
+								   cache_file.length());
 			ContentResolver cr = getContentResolver();
 			ContentValues rss_item = parser.readItem();
 			while(rss_item != null) {
 				cr.insert(Item.URI, rss_item);
 				rss_item = parser.readItem();
+				status.putInt(MSG_PROG, parser.getProgress());
+				sendProgress(status);
 			}
 		} catch (FileNotFoundException e) {}
 		finally {
 			if(parser != null) parser.close();
 		}
+		
+		// Delete the raw feed
+		cache_file.delete();
+		// Close up
+		status.putInt(MSG_PROG, 100);
+		sendProgress(status);
+	}
+	
+	
+	/** Transmit a message to anyone listening.
+	 *  @param msg The message to send (passed
+	 *  as the extras of the intent)        */
+	private void transmit(Bundle msg) {
+		if(msg == null) return;
+		Intent broadcast = new Intent();
+		broadcast.setAction(BROADCAST);
+		broadcast.addCategory(Intent.CATEGORY_DEFAULT);
+		broadcast.putExtras(msg);
+		sendBroadcast(broadcast);
+	}
+	
+	
+	/** This is similar to {@link #transmit(Bundle)}
+	 *  except it checks the {@code #MSG_PROG}
+	 *  parameter to make sure the last transmission
+	 *  wasn't the same. This helps to cut down on
+	 *  redundant broadcasts.
+	 *  @param msg The message to send (passed
+	 *  as the extras of the intent)        */
+	private void sendProgress(Bundle msg) {
+		if(msg == null) return;
+		int prog = msg.getInt(MSG_PROG);
+		if(prog == last_prog) return;
+		last_prog = prog;
+		transmit(msg);
 	}
 }
