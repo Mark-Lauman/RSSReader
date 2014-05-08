@@ -1,6 +1,8 @@
 package ca.marklauman.rssreader.database;
 
 import java.util.Calendar;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import ca.marklauman.rssreader.database.schema.Database;
 import ca.marklauman.rssreader.database.schema.Item;
@@ -11,7 +13,6 @@ import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.Html;
@@ -52,12 +53,16 @@ public class RSSData extends ContentProvider {
 	
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
+		
+		/* Match the uri to a table and do any
+		 * pre-insertion operations.        */
 		String table;
-		switch(matcher.match(uri)) {
+		int uri_type = matcher.match(uri);
+		switch(uri_type) {
 		case ITEM_ID:
 			table = Item.TABLE_NAME;
 			long now = Calendar.getInstance()
-					   		   .getTimeInMillis();
+					   .getTimeInMillis();
 			values.put(Item._TIME_SAVE, now);
 			String brief = Html.fromHtml(values.getAsString(Item._CONTENT))
 					   	   .toString()
@@ -75,18 +80,19 @@ public class RSSData extends ContentProvider {
 			return null;
 		}
 		
-		// do the insertion
+		/* do the insertion */
 		SQLiteDatabase db = cache_db.getWritableDatabase();
 		long id;
 		try {
+			/* Insertion will fail if the db is
+			 * destroyed in another thread (such
+			 * as when the user clears the app data
+			 * in the Android settings screen)     */
 			id = db.insertWithOnConflict(table,
 										 null, values,
 										 SQLiteDatabase.CONFLICT_IGNORE);
 		} catch (Exception e) {
-			/* Insertion will fail if the db is
-			 * destroyed in another thread (such
-			 * as when the user clears the cache data
-			 * in the Android Settings screen)     */
+			// reopen the database and redo the insert
 			try{cache_db.close();
 			} catch(Exception e2) {}
 			Context c = getContext();
@@ -97,7 +103,51 @@ public class RSSData extends ContentProvider {
 										 null, values,
 										 SQLiteDatabase.CONFLICT_IGNORE);
 		}
+		
+		/* In the event of a conflict, look for an
+		 * existing row with the same values.
+		 * If one exists, we'll return it as the
+		 * inserted row.                        */
+		if(id < 0) {
+			values.remove(Item._TIME_SAVE);
+			Set<Entry<String, Object>> vals = values.valueSet();
+			String sel = "";
+			String[] selArgs = new String[vals.size()];
+			int i = 0;
+			for(Entry<String, Object> entry : vals) {
+				sel += " AND "+ entry.getKey() + "=?";
+				selArgs[i] = "" + entry.getValue();
+				i++;
+			}
+			if(sel.length() > 0)
+				sel = sel.substring(5);
+			
+			Cursor c = db.query(table,
+								new String[]{"_id"},
+								sel, selArgs,
+								null, null, null);
+			
+			if(0 < c.getCount()) {
+				int id_col = c.getColumnIndex("_id");
+				c.moveToFirst();
+				id = c.getLong(id_col);
+			}
+		}
+		
+		/* Post-insertion operations. */
 		if(id < 0) return null;
+		switch(uri_type) {
+		case ITEM_ID:
+			// update the save time of inserted Items
+			ContentValues new_time = new ContentValues();
+			long now = Calendar.getInstance()
+							   .getTimeInMillis();
+			new_time.put(Item._TIME_INSERT, now);
+			db.update(table, new_time,
+					  "_id=?", new String[]{id+""});
+		}
+		
+		/* Return the entry's url. */
 		getContext().getContentResolver()
 					.notifyChange(uri, null);
 		return Uri.withAppendedPath(uri, "" + id);
@@ -164,42 +214,5 @@ public class RSSData extends ContentProvider {
 			getContext().getContentResolver()
 						.notifyChange(uri, null);
 		return rows;
-	}
-	
-	
-	/** Handler class for the SQLite Database.
-	 *  The {@link RSSData} class acts as a wrapper to
-	 *  this one.
-	 *  @author Mark Lauman                           */
-	private static class DBHandler extends SQLiteOpenHelper {
-		
-		/** Create a link to the database.
-		 *  @param c The application {@link Context}.
-		 *  @param filename The file to use for the db */
-		public DBHandler(Context c, String filename) {
-			super(c, filename, null, Database.VERSION);
-		}
-		
-		@Override
-		public void onOpen(SQLiteDatabase db) {
-			super.onOpen(db);
-			if (!db.isReadOnly())
-				db.execSQL("PRAGMA foreign_keys=ON;");
-		}
-		
-		@Override
-		public void onCreate(SQLiteDatabase db) {
-			// create the tables
-			db.execSQL(Item.CREATE_TABLE);
-		}
-		
-		@Override
-		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-			// remove the tables
-			db.execSQL(Item.DROP_TABLE);
-			
-			// recreate everything
-			onCreate(db);
-		}
-	}
+	}	
 }

@@ -27,8 +27,10 @@ public class Item implements BaseColumns {
 	public static final String _URL = "url";
 	/** Time this item was posted (according to the feed). */
 	public static final String _TIME = "time";
-	/** Time this item was downloaded. */
+	/** First time this item was inserted. */
 	public static final String _TIME_SAVE = "time_save";
+	/** Last time this item was inserted. */
+	public static final String _TIME_INSERT = "time_insert";
 	
 	public static final String CREATE_TABLE =
 			"CREATE TABLE " + TABLE_NAME +" ("
@@ -39,6 +41,7 @@ public class Item implements BaseColumns {
 			+ _URL + " text, "
 			+ _TIME + " integer, "
 			+ _TIME_SAVE + " integer, "
+			+ _TIME_INSERT + " integer, "
 			+ "CONSTRAINT unique_item UNIQUE ("
 			+ _TITLE + ", "
 			+ _CONTENT + ", "
