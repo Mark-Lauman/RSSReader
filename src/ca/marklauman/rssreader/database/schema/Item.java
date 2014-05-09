@@ -45,8 +45,7 @@ public class Item implements BaseColumns {
 			+ "CONSTRAINT unique_item UNIQUE ("
 			+ _TITLE + ", "
 			+ _CONTENT + ", "
-			+ _URL + ", "
-			+ _TIME + ") ON CONFLICT ABORT"
+			+ _URL + ") ON CONFLICT ABORT"
 			+ ");";
 	
 	public static final String DROP_TABLE =

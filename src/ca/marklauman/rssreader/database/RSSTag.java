@@ -101,7 +101,8 @@ public final class RSSTag {
 	/** Parse an RSS-formatted time.
 	 *  @param time The time as seen in the RSS file.
 	 *  @return The time in the UNIX time format
-	 *  (ms since UNIX epoch).                     */
+	 *  (ms since UNIX epoch). If the time is
+	 *  unrecognized, returns 0.                   */
 	public synchronized static long parseTime(String time) {
 		// try last successful formatter first
 		try { return time_formats[last_time].parse(time)

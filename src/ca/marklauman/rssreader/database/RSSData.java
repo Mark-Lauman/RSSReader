@@ -53,6 +53,9 @@ public class RSSData extends ContentProvider {
 	
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
+		// do not allow null rows
+		if(values == null || values.size() < 1)
+			return null;
 		
 		/* Match the uri to a table and do any
 		 * pre-insertion operations.        */
@@ -64,7 +67,12 @@ public class RSSData extends ContentProvider {
 			long now = Calendar.getInstance()
 					   .getTimeInMillis();
 			values.put(Item._TIME_SAVE, now);
-			String brief = Html.fromHtml(values.getAsString(Item._CONTENT))
+			String content = values.getAsString(Item._CONTENT);
+			if(content == null) {
+				values.put(Item._CONTENT, "");
+				content = "";
+			}
+			String brief = Html.fromHtml(content)
 					   	   .toString()
 					   	   .replace(""+(char)65532, "")
 					   	   .replace("\n", " ")

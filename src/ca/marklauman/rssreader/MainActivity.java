@@ -116,9 +116,9 @@ public class MainActivity extends SherlockFragmentActivity
 									 Item._TITLE,
 									 Item._BRIEF,
 									 Item._URL,
-									 Item._TIME,
-									 Item._TIME_SAVE,
-									 Item._TIME_INSERT});
+									 "ifnull(" + Item._TIME
+									 + ", " + Item._TIME_SAVE
+									 + ") AS " + Item._TIME});
 		c.setSortOrder(Item._TIME + " DESC, " + Item._TITLE);
 		return c;
 	}

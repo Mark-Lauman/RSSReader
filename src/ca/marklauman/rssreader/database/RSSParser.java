@@ -77,7 +77,7 @@ public final class RSSParser {
 		 * the end of the file, or an exception.    */
 		try{ while(parser.next() != XmlPullParser.END_DOCUMENT
 				    && !(parser.getEventType() == XmlPullParser.START_TAG
-						 || RSSTag.isItem(parser.getName()))) {
+						 && RSSTag.isItem(parser.getName()))) {
 		}
 		} catch (Exception e) {
 			// Exception = no more items found.
@@ -113,7 +113,10 @@ public final class RSSParser {
 				res.put(Item._CONTENT, readTag());
 				break;
 			case RSSTag.TYPE_TIME:
-				res.put(Item._TIME, RSSTag.parseTime(readTag()));
+				long time = RSSTag.parseTime(readTag());
+				if(time == 0)
+					res.putNull(Item._TIME);
+				else res.put(Item._TIME, time);
 				break;
 			}
 		}} catch (Exception e) {
