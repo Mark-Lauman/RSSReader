@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Calendar;
 
 import ca.marklauman.rssreader.database.schema.Item;
 import android.app.IntentService;
@@ -19,18 +20,11 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 
 /** <p>Service used to update the database from the
- *  internet.</p>
- *  <p>Some essential parameters must be specified
- *  with {@link Intent#putExtras(Bundle)} before
- *  you launch this service. These are the urls
- *  you wish to update ({@link #PARAM_URL})
- *  and the cache location
- *  ({@link #PARAM_CACHE}).
- *  This service <b>must</b> have write access
- *  to the cache, or it will fail to do anything.
- *  All cache files will be deleted on completion.</p>
+ *  internet. Only the URLs specified in the
+ *  ({@link #PARAM_URL} extra will be updated.</p>
  *  <p>The progress of this service may be tracked
  *  with {@link #BROADCAST}s. For more details,
  *  see all the variables whose names begin with
@@ -41,17 +35,10 @@ public class Updater extends IntentService {
 	/** When you launch an {@link Intent} calling
 	 *  this service, use
 	 *  {@link Intent#putExtra(String, String)}
-	 *  with this name to pass the url of the
+	 *  with this name to pass the URL of the
 	 *  feed to download.                    */
 	public static final String PARAM_URL =
 			"ca.marklauman.rssdata.url";
-	/** When you launch an {@link Intent} calling
-	 *  this service, use
-	 *  {@link Intent#putExtra(String, String)}
-	 *  with this name to pass the path to the
-	 *  application's cache directory.       */
-	public static final String PARAM_CACHE =
-			"ca.marklauman.rssdata.cache_dir";
 	
 	/** {@link Intent}s broadcast by this service
 	 *  will have this type of action.         */
@@ -134,7 +121,7 @@ public class Updater extends IntentService {
 		status.putInt(MSG_ERR, ERR_PARAMS);
 		last_prog = 0;
 		
-		// Get the cache directory & url to load
+		// Get the url to load
 		if(intent == null) {
 			// bad params
 			transmit(status);	return;
@@ -150,12 +137,6 @@ public class Updater extends IntentService {
 			// bad params
 			transmit(status);	return;
 		}
-		String cache_dir = extras.getString(PARAM_CACHE);
-		if(cache_dir == null)  {
-			// bad params
-			transmit(status);	return;
-		}
-		cache_dir += "/";
 		
 		// Check if we're online
 		ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -188,6 +169,7 @@ public class Updater extends IntentService {
 		
 		// We are online, on wifi or ethernet
 		// Setup variables for download phase
+		String cache_dir = getCacheDir().getPath() + "/";
 		File cache_file = new File(cache_dir + "tmp.rss");
 		HttpURLConnection conn = null;
 		ProgressStream in = null;
@@ -239,10 +221,10 @@ public class Updater extends IntentService {
 		status.putInt(MSG_PROG, 0);
 		sendProgress(status);
 		RSSParser parser = null;
+		ContentResolver cr = getContentResolver();
 		try {
 			parser = new RSSParser(new FileInputStream(cache_file),
 								   cache_file.length());
-			ContentResolver cr = getContentResolver();
 			ContentValues rss_item = parser.readItem();
 			while(rss_item != null) {
 				cr.insert(Item.URI, rss_item);
@@ -257,6 +239,20 @@ public class Updater extends IntentService {
 		
 		// Delete the raw feed
 		cache_file.delete();
+		
+		// Clear old feed items from the db
+		long forget = Long.parseLong(
+				  PreferenceManager.getDefaultSharedPreferences(this)
+								   .getString("forget", "0"));
+		if(forget != 0) {
+			long now = Calendar.getInstance()
+							   .getTimeInMillis();
+			long old = now - forget;
+			cr.delete(Item.URI,
+					  Item._TIME_INSERT + " < ?",
+					  new String[]{"" + old});
+		}
+		
 		// Close up
 		status.putInt(MSG_PROG, 100);
 		sendProgress(status);

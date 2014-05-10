@@ -65,7 +65,7 @@ public class RSSData extends ContentProvider {
 		case ITEM_ID:
 			table = Item.TABLE_NAME;
 			long now = Calendar.getInstance()
-					   .getTimeInMillis();
+					   		   .getTimeInMillis();
 			values.put(Item._TIME_SAVE, now);
 			String content = values.getAsString(Item._CONTENT);
 			if(content == null) {
@@ -140,6 +140,7 @@ public class RSSData extends ContentProvider {
 				c.moveToFirst();
 				id = c.getLong(id_col);
 			}
+			c = null;
 		}
 		
 		/* Post-insertion operations. */

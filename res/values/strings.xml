@@ -15,6 +15,8 @@
     <string name="feeds">Feeds</string>
     <string name="feed1">Feed URL #1</string>
     <string name="no_url">No URL Set</string>
+    <string name="pref_forget">Forget entries after</string>
+    <string name="pref_forget_def">86400000</string>
     
     <string name="sample_time">8:54 AM</string>
     <string name="sample_title">Lorem ipsum dolor sit amet, consectetur adipg elit.</string>

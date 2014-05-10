@@ -42,6 +42,8 @@ public class MainActivity extends SherlockFragmentActivity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
+		PreferenceManager.setDefaultValues(this, R.xml.pref_feeds, false);
+		
 		IntentFilter filter = new IntentFilter(Updater.BROADCAST);
 		filter.addCategory(Intent.CATEGORY_DEFAULT);
 		updaterListener = new UpdateListener(this);
@@ -94,7 +96,6 @@ public class MainActivity extends SherlockFragmentActivity
 										   .getString("feed1", "");
 			Intent refresh = new Intent(this, Updater.class);
 			refresh.putExtra(Updater.PARAM_URL, path);
-			refresh.putExtra(Updater.PARAM_CACHE, getCacheDir().getPath());
 			startService(refresh);
 			return true;
 		

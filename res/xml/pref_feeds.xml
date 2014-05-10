@@ -5,6 +5,14 @@
     <ca.marklauman.rssreader.settings.ValueTextPreference
         android:title="@string/feed1"
         android:summary="@string/no_url"
+        android:defaultValue=""
         android:key="feed1" />
+    
+    <ca.marklauman.rssreader.settings.ValueListPreference
+        android:title="@string/pref_forget"
+        android:entries="@array/pref_forget_entries"
+        android:entryValues="@array/pref_forget_vals"
+        android:defaultValue="@string/pref_forget_def"
+        android:key="forget" />
     
 </PreferenceScreen>
