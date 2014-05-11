@@ -1,4 +1,4 @@
-package ca.marklauman.rssreader.adapters;
+package ca.marklauman.tools;
 
 import java.security.InvalidParameterException;
 import java.util.HashSet;

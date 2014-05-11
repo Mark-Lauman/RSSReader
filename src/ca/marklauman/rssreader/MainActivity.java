@@ -1,11 +1,14 @@
 package ca.marklauman.rssreader;
 
-import ca.marklauman.rssreader.adapters.ItemAdapter;
 import ca.marklauman.rssreader.database.Updater;
 import ca.marklauman.rssreader.database.schema.Item;
+import ca.marklauman.rssreader.panel.item.ItemAdapter;
+import ca.marklauman.rssreader.panel.item.ItemListener;
 import ca.marklauman.rssreader.settings.SettingsActivity;
 
 import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.view.ActionMode;
+import com.actionbarsherlock.view.ActionMode.Callback;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 
@@ -27,9 +30,16 @@ import android.widget.Toast;
 public class MainActivity extends SherlockFragmentActivity
 						  implements LoaderCallbacks<Cursor> {
 	
+	/** The current context bar in use (null if
+	 *  the regular action bar is in use instead) */
+	ActionMode contextBar = null;
+	
 	/** Listens to the rssdata {@link Updater}
 	 *  so progress can be displayed.       */
 	private UpdateListener updaterListener;
+	/** Listens to the items list's click events and
+	 *  provides the functions of its context menu. */
+	private ItemListener itemListen;
 	
 	/** Adapter for the item list. */
 	private ItemAdapter adapt;
@@ -61,10 +71,13 @@ public class MainActivity extends SherlockFragmentActivity
 	public void onStart() {
 		super.onStart();
 		
+		// Bind things to the item list
 		ListView list = (ListView) findViewById(R.id.list);
 		adapt = new ItemAdapter(this);
+		itemListen = new ItemListener(this, adapt);
 		list.setAdapter(adapt);
-		list.setOnItemClickListener(adapt);
+		list.setOnItemClickListener(itemListen);
+		list.setOnItemLongClickListener(itemListen);
 		
 		prog_bar = (ProgressBar) findViewById(R.id.progress);
 		
@@ -106,6 +119,29 @@ public class MainActivity extends SherlockFragmentActivity
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
+		
+	}
+	
+	
+	@Override
+	public ActionMode startActionMode(Callback callback) {
+		if(contextBar != null)
+			contextBar.finish();
+		contextBar = getSherlock().startActionMode(callback);
+		return contextBar;
+	}
+	
+	
+	/** Removes all local ties to the current
+	 *  {@link ActionMode}.
+	 *  The {@code ActionMode} is not closed -
+	 *  users may call {@link ActionMode#finish()}
+	 *  to do that.
+	 *  @return The current {@code ActionMode}. */
+	public ActionMode clearActionMode() {
+		ActionMode mode = contextBar;
+		contextBar = null;
+		return mode;
 	}
 	
 	

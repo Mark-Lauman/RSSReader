@@ -10,6 +10,7 @@
     <string name="err_connection">Connection Lost</string>
     <string name="err_internal">Internal error. Alert the developer.</string>
     
+    <string name="context_toggle_all">Toggle All</string>
     
     <string name="action_settings">Settings</string>
     <string name="feeds">Feeds</string>
