@@ -1,9 +1,7 @@
 package ca.marklauman.rssreader;
 
 import ca.marklauman.rssreader.database.Updater;
-import ca.marklauman.rssreader.database.schema.Item;
-import ca.marklauman.rssreader.panel.item.ItemAdapter;
-import ca.marklauman.rssreader.panel.item.ItemListener;
+import ca.marklauman.rssreader.panel.item.ItemFragment;
 import ca.marklauman.rssreader.settings.SettingsActivity;
 
 import com.actionbarsherlock.app.SherlockFragmentActivity;
@@ -12,39 +10,27 @@ import com.actionbarsherlock.view.ActionMode.Callback;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
-import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.view.View;
-import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
-public class MainActivity extends SherlockFragmentActivity
-						  implements LoaderCallbacks<Cursor> {
+public class MainActivity extends SherlockFragmentActivity {
+	
+	/** ID for the {@link Loader} associated with
+	 *  the item panel. */
+	public static final int LOADER_ID_ITEMS = 1;
 	
 	/** The current context bar in use (null if
 	 *  the regular action bar is in use instead) */
-	ActionMode contextBar = null;
-	
-	/** Listens to the rssdata {@link Updater}
-	 *  so progress can be displayed.       */
-	private UpdateListener updaterListener;
-	/** Listens to the items list's click events and
-	 *  provides the functions of its context menu. */
-	private ItemListener itemListen;
-	
-	/** Adapter for the item list. */
-	private ItemAdapter adapt;
-	/** Progress bar on the screen bottom */
-	private ProgressBar prog_bar;
+	private ActionMode contextBar = null;
+	/** Handler for displaying messages
+	 *  sent by {@link Updater}.     */
+	private DatabaseUI dbHandler;
+	/** The ListFragment containing the RSS items. */
+	private ItemFragment item_frag;
 	
 	
 	@Override
@@ -52,42 +38,32 @@ public class MainActivity extends SherlockFragmentActivity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
+		// if no settings, apply the default ones
 		PreferenceManager.setDefaultValues(this, R.xml.pref_feeds, false);
 		
+		// set up the database handler
+		ProgressBar bar = (ProgressBar) findViewById(R.id.progress);
+		dbHandler = new DatabaseUI(this, bar);
 		IntentFilter filter = new IntentFilter(Updater.BROADCAST);
 		filter.addCategory(Intent.CATEGORY_DEFAULT);
-		updaterListener = new UpdateListener(this);
-		registerReceiver(updaterListener, filter);
-	}
-	
-	
-	@Override
-	public void onSaveInstanceState(Bundle outState) {
-		super.onSaveInstanceState(outState);
+		registerReceiver(dbHandler, filter);
+		
+		// set up the item fragment
+		item_frag = (ItemFragment) getSupportFragmentManager().findFragmentById(R.id.list);
 	}
 	
 	
 	@Override
 	public void onStart() {
 		super.onStart();
-		
-		// Bind things to the item list
-		ListView list = (ListView) findViewById(R.id.list);
-		adapt = new ItemAdapter(this);
-		itemListen = new ItemListener(this, adapt);
-		list.setAdapter(adapt);
-		list.setOnItemClickListener(itemListen);
-		list.setOnItemLongClickListener(itemListen);
-		
-		prog_bar = (ProgressBar) findViewById(R.id.progress);
-		
-		getSupportLoaderManager().restartLoader(1, null, this);
+		// restart the loaders
+		getSupportLoaderManager().restartLoader(LOADER_ID_ITEMS, null, item_frag);
 	}
 	
 	
 	@Override
 	public void onDestroy() {
-		unregisterReceiver(updaterListener);
+		unregisterReceiver(dbHandler);
 		super.onDestroy();
 	}
 	
@@ -119,7 +95,6 @@ public class MainActivity extends SherlockFragmentActivity
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
-		
 	}
 	
 	
@@ -132,99 +107,19 @@ public class MainActivity extends SherlockFragmentActivity
 	}
 	
 	
-	/** Removes all local ties to the current
-	 *  {@link ActionMode}.
+	/** Removes all local instances of the current
+	 *  {@link ActionMode}, allowing it to be
+	 *  garbage collected.
 	 *  The {@code ActionMode} is not closed -
 	 *  users may call {@link ActionMode#finish()}
 	 *  to do that.
-	 *  @return The current {@code ActionMode}. */
+	 *  @return The {@code ActionMode} formerly
+	 *  tied to this activity, or {@code null}
+	 *  if no mode was active
+	 *  (the standard action bar was displayed). */
 	public ActionMode clearActionMode() {
 		ActionMode mode = contextBar;
 		contextBar = null;
 		return mode;
-	}
-	
-	
-	@Override
-	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-		CursorLoader c = new CursorLoader(this);
-		c.setUri(Item.URI);
-		c.setProjection(new String[]{Item._ID,
-									 Item._TITLE,
-									 Item._BRIEF,
-									 Item._URL,
-									 Item._READ,
-									 "ifnull(" + Item._TIME
-									 + ", " + Item._TIME_SAVE
-									 + ") AS " + Item._TIME});
-		c.setSortOrder(Item._TIME + " DESC, " + Item._TITLE);
-		return c;
-	}
-	
-	
-	@Override
-	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-		adapt.changeCursor(data);
-	}
-	
-	
-	@Override
-	public void onLoaderReset(Loader<Cursor> loader) {
-		adapt.changeCursor(null);
-	}
-	
-	
-	private class UpdateListener extends BroadcastReceiver {
-		private Context mContext;
-		
-		public UpdateListener(Context c) {
-			mContext = c;
-		}
-		
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			Bundle extras = intent.getExtras();
-			String msg;
-			
-			switch(extras.getInt(Updater.MSG_ERR)) {
-			case Updater.ERR_OFFLINE:
-				msg = mContext.getString(R.string.err_offline);
-				Toast.makeText(mContext, msg, Toast.LENGTH_LONG)
-					 .show();
-				prog_bar.setVisibility(View.GONE);
-				return;
-			case Updater.ERR_URL:
-				msg = mContext.getString(R.string.err_url);
-				String url = extras.getString(Updater.MSG_URL);
-				Toast.makeText(mContext, msg + " " + url, Toast.LENGTH_LONG)
-					 .show();
-				prog_bar.setVisibility(View.GONE);
-				return;
-			case Updater.ERR_CONN:
-				msg = mContext.getString(R.string.err_connection);
-				Toast.makeText(mContext, msg, Toast.LENGTH_LONG)
-					 .show();
-				prog_bar.setVisibility(View.GONE);
-				return;
-			case Updater.ERR_NONE:
-				break;
-			default:
-				msg = mContext.getString(R.string.err_internal);
-				Toast.makeText(mContext, msg, Toast.LENGTH_LONG)
-				 	 .show();
-				prog_bar.setVisibility(View.GONE);
-				return;
-			}
-			
-			int phase = extras.getInt(Updater.MSG_PHASE);
-			int prog = extras.getInt(Updater.MSG_PROG);
-			prog_bar.setVisibility(View.VISIBLE);
-			if(phase == Updater.PHASE_DOWNLOAD)
-				prog_bar.setProgress(prog / 2);
-			else {
-				if(prog == 100) prog_bar.setVisibility(View.GONE);
-				else prog_bar.setProgress(prog / 2 + 50);
-			}
-		}
 	}
 }
