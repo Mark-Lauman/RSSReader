@@ -17,19 +17,21 @@ public class Item implements BaseColumns {
 	public static final Uri URI = 
 			Uri.withAppendedPath(Database.URI, TABLE_NAME);
 	
-	/** Title of the feed item. */
+	/** <b>String</b> - Title of the feed item. */
 	public static final String _TITLE = "title";
-	/** Brief version of the {@link #CONTENT}. */
+	/** <b>String</b> - Brief version of the {@link #CONTENT}. */
 	public static final String _BRIEF = "brief";
-	/** Content of the feed item. */
+	/** <b>String</b> - Content of the feed item. */
 	public static final String _CONTENT = "content";
-	/** URL provided for this item. */
+	/** <b>String</b> - URL provided for this item. */
 	public static final String _URL = "url";
-	/** Time this item was posted (according to the feed). */
+	/** <b>Boolean</b> - True if this item has been read. */
+	public static final String _READ = "read";
+	/** <b>Long</b> - Time this item was posted (according to the feed). */
 	public static final String _TIME = "time";
-	/** First time this item was inserted. */
+	/** <b>Long</b> - First time this item was inserted. */
 	public static final String _TIME_SAVE = "time_save";
-	/** Last time this item was inserted. */
+	/** <b>Long</b> - Last time this item was inserted. */
 	public static final String _TIME_INSERT = "time_insert";
 	
 	public static final String CREATE_TABLE =
@@ -39,6 +41,7 @@ public class Item implements BaseColumns {
 			+ _BRIEF + " text, "
 			+ _CONTENT + " text, "
 			+ _URL + " text, "
+			+ _READ + " integer DEFAULT 0, "
 			+ _TIME + " integer, "
 			+ _TIME_SAVE + " integer, "
 			+ _TIME_INSERT + " integer, "

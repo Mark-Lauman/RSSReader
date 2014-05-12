@@ -2,6 +2,7 @@ package ca.marklauman.rssreader.panel.item;
 
 import ca.marklauman.rssreader.MainActivity;
 import ca.marklauman.rssreader.R;
+import ca.marklauman.rssreader.database.schema.Item;
 
 import com.actionbarsherlock.view.ActionMode;
 import com.actionbarsherlock.view.Menu;
@@ -9,6 +10,8 @@ import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.view.ActionMode.Callback;
 
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.net.Uri;
 import android.view.View;
@@ -37,6 +40,7 @@ public class ItemListener implements OnItemClickListener,
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 		switch(adapt.getChoiceMode()) {
 		case ItemAdapter.CHOICE_MODE_NONE:
+			setRead(id);
 			Uri url = adapt.getURL(position);
 			Intent launchBrowser = new Intent(Intent.ACTION_VIEW, url);
 			activity.startActivity(launchBrowser);
@@ -94,5 +98,15 @@ public class ItemListener implements OnItemClickListener,
 	public void onDestroyActionMode(ActionMode mode) {
 		adapt.setChoiceMode(ItemAdapter.CHOICE_MODE_NONE);
 		activity.clearActionMode();
+	}
+	
+	
+	private void setRead(long id) {
+		ContentResolver cr = activity.getContentResolver();
+		ContentValues vals = new ContentValues();
+		vals.put(Item._READ, true);
+		cr.update(Item.URI, vals,
+				  Item._ID + "=?",
+				  new String[]{"" + id});
 	}
 }

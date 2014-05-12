@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingTop="4dp"
@@ -12,7 +13,7 @@
         android:layout_height="wrap_content"
         android:paddingLeft="10dp"
         android:layout_alignParentRight="true"
-        android:textColor="@android:color/primary_text_light"
+        android:textColor="@color/unread_feed"
         android:singleLine="true"
         android:textSize="12sp"
         android:text="@string/sample_time" />
@@ -23,7 +24,7 @@
         android:layout_alignParentLeft="true"
         android:layout_toLeftOf="@id/time"
         android:layout_alignWithParentIfMissing="true"
-        android:textColor="@android:color/primary_text_light"
+        android:textColor="@color/unread_feed"
         android:singleLine="true"
         android:ellipsize="end"
         android:textSize="18sp"
@@ -35,7 +36,7 @@
         android:layout_alignParentLeft="true"
         android:layout_below="@id/title"
         android:layout_alignWithParentIfMissing="true"
-        android:textColor="@android:color/tertiary_text_light"
+        android:textColor="@color/unread_feed"
         android:textSize="14sp"
         android:maxLines="2"
         android:ellipsize="end"

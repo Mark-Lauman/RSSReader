@@ -24,6 +24,8 @@ public class ItemAdapter extends CursorSelAdapter {
 	private int col_time;
 	/** index of the url column */
 	private int col_url;
+	/** index of the read column */
+	private int col_read;
 	/** Formatter for displaying the year correctly */
 	private DateFormat format_year;
 	/** Formatter for displaying the month correctly */
@@ -36,9 +38,11 @@ public class ItemAdapter extends CursorSelAdapter {
 		super(context, R.layout.list_item,
 			  new String[]{Item._TITLE,
 						   Item._TIME,
+						   Item._READ,
 						   Item._BRIEF},
 				 new int[]{R.id.title,
 						   R.id.time,
+						   R.id.layout,
 						   R.id.brief});
 		setViewBinder(new Binder());
 		format_year = android.text.format.DateFormat
@@ -55,6 +59,7 @@ public class ItemAdapter extends CursorSelAdapter {
 		if(cursor == null) return;
 		col_time = cursor.getColumnIndex(Item._TIME);
 		col_url = cursor.getColumnIndex(Item._URL);
+		col_read = cursor.getColumnIndex(Item._READ);
 	}
 	
 	
@@ -72,8 +77,10 @@ public class ItemAdapter extends CursorSelAdapter {
 	}
 	
 	
-	/** Class used to interpret {@link Item}s into
-	 *  readable format for {@link ItemAdapter}s.
+	/** Class used to interpret parts of the
+	 *  {@link Item} that are not stored in legible
+	 *  formats. Transforms them into a legible format
+	 *  before displaying them.
 	 *  @author Mark Lauman                    */
 	private class Binder implements ViewBinder {
 		@Override
@@ -81,6 +88,21 @@ public class ItemAdapter extends CursorSelAdapter {
 			if(columnIndex == col_time) {
 				TextView txt = (TextView) view;
 				txt.setText(getTimeString(cursor.getLong(columnIndex)));
+				return true;
+			} else if(columnIndex == col_read) {
+				TextView title = (TextView) view.findViewById(R.id.title);
+				TextView brief = (TextView) view.findViewById(R.id.brief);
+				TextView time = (TextView) view.findViewById(R.id.time);
+				int color;
+				if(0 == cursor.getInt(columnIndex))
+					color = mContext.getResources()
+									.getColor(R.color.unread_feed);
+				else
+					color = mContext.getResources()
+									.getColor(R.color.read_feed);
+				title.setTextColor(color);
+				brief.setTextColor(color);
+				time.setTextColor(color);
 				return true;
 			}
 			return false;
@@ -91,7 +113,7 @@ public class ItemAdapter extends CursorSelAdapter {
 		 *  Follows system settings for time formatting.
 		 *  @param time The time to convert (UNIX format)
 		 *  @return That time as a string.             */
-		public String getTimeString(long time) {
+		private String getTimeString(long time) {
 			Calendar now = Calendar.getInstance();
 			Calendar then = Calendar.getInstance();
 			then.setTimeInMillis(time);

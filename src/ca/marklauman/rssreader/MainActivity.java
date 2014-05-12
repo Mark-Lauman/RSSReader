@@ -153,6 +153,7 @@ public class MainActivity extends SherlockFragmentActivity
 									 Item._TITLE,
 									 Item._BRIEF,
 									 Item._URL,
+									 Item._READ,
 									 "ifnull(" + Item._TIME
 									 + ", " + Item._TIME_SAVE
 									 + ") AS " + Item._TIME});

@@ -64,25 +64,21 @@ public class RSSData extends ContentProvider {
 		switch(uri_type) {
 		case ITEM_ID:
 			table = Item.TABLE_NAME;
-			long now = Calendar.getInstance()
-					   		   .getTimeInMillis();
-			values.put(Item._TIME_SAVE, now);
 			String content = values.getAsString(Item._CONTENT);
 			if(content == null) {
 				values.put(Item._CONTENT, "");
 				content = "";
 			}
-			String brief = Html.fromHtml(content)
-					   	   .toString()
-					   	   .replace(""+(char)65532, "")
-					   	   .replace("\n", " ")
-					   	   .replace("\r", " ")
-					   	   .replace("  ", " ")
-					   	   .replace("  ", " ")
-					   	   .trim();
-			if(brief.length() > 1000)
-				brief = brief.substring(0, 999) + "…";
-			values.put(Item._BRIEF, brief);
+			if(!values.containsKey(Item._BRIEF)) {
+				String brief = stripHTML(content);
+				if(brief.length() > 1000)
+					brief = brief.substring(0, 999) + "…";
+				values.put(Item._BRIEF, brief);
+			}
+			if(!values.containsKey(Item._TIME_SAVE))
+				values.put(Item._TIME_SAVE,
+						   Calendar.getInstance()
+								   .getTimeInMillis());
 			break;
 		default:
 			return null;
@@ -223,5 +219,22 @@ public class RSSData extends ContentProvider {
 			getContext().getContentResolver()
 						.notifyChange(uri, null);
 		return rows;
-	}	
+	}
+	
+	
+	/** Strip all html code from a string.
+	 *  @param htmlString A string with html
+	 *  formatting.
+	 *  @return That string will all such formatting
+	 *  removed.                                  */
+	private static String stripHTML(String htmlString) {
+		return Html.fromHtml(htmlString)
+				   .toString()
+				   .replace(""+(char)65532, "")
+				   .replace("\n", " ")
+				   .replace("\r", " ")
+				   .replace("  ", " ")
+				   .replace("  ", " ")
+				   .trim();
+	}
 }

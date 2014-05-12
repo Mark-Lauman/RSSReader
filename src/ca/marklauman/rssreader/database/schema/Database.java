@@ -9,7 +9,7 @@ public final class Database {
 	Database() {}
 
 	/** Database version number. */
-	public static final int VERSION = 3;
+	public static final int VERSION = 4;
 	
 	/** Name of the database file */
 	public final static String NAME = "rssdata.db";
